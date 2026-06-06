@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mouhamadou BA | Ingénieur Maintenance</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primaire: '#0F0F13',
+                        accent: '#D4A843',
+                        fond: '#F5F3EE',
+                        sombre: '#1E1E26'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- React & ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- GSAP -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        body {
+            background-color: #0F0F13;
+            color: #F5F3EE;
+            overflow-x: hidden;
+        }
+
+        /* SVG Noise Filter */
+        .noise-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0.05;
+        }
+
+        .magnet-btn {
+            transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        
+        .magnet-btn:hover {
+            transform: scale(1.03);
+        }
+
+        .hover-lift {
+            transition: transform 0.3s ease;
+        }
+        
+        .hover-lift:hover {
+            transform: translateY(-2px);
+        }
+
+        .glass-nav {
+            background: rgba(15, 15, 19, 0.6);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(212, 168, 67, 0.1);
+        }
+
+        .timeline-dot {
+            box-shadow: 0 0 10px rgba(212, 168, 67, 0.5);
+        }
+
+        /* Hide scrollbar for clean look */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0F0F13;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1E1E26;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #D4A843;
+        }
+    </style>
+</head>
+<body>
+    <svg class="noise-overlay" xmlns="http://www.w3.org/2000/svg">
+        <filter id="noiseFilter">
+            <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" stitchTiles="stitch"/>
+        </filter>
+        <rect width="100%" height="100%" filter="url(#noiseFilter)"/>
+    </svg>
+
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useEffect, useRef, useState } = React;
+        gsap.registerPlugin(ScrollTrigger);
+
+        // --- Icons (using Lucide) ---
+        const Icon = ({ name, size = 24, className = "" }) => {
+            const iconRef = useRef(null);
+            useEffect(() => {
+                if (iconRef.current) {
+                    lucide.createIcons({
+                        icons: { [name]: window.lucide.icons[name] },
+                        nameAttr: 'data-lucide',
+                        attrs: { class: className, width: size, height: size }
+                    });
+                }
+            }, [name, size, className]);
+            return <i ref={iconRef} data-lucide={name}></i>;
+        };
+
+        // --- Components ---
+
+        const Navbar = () => {
+            const navRef = useRef(null);
+
+            useEffect(() => {
+                const ctx = gsap.context(() => {
+                    ScrollTrigger.create({
+                        start: "top -50",
+                        end: 99999,
+                        toggleClass: {className: "glass-nav", targets: navRef.current}
+                    });
+                });
+                return () => ctx.revert();
+            }, []);
+
+            return (
+                <nav ref={navRef} className="fixed top-6 left-1/2 -translate-x-1/2 z-40 rounded-full px-8 py-4 transition-all duration-500 flex items-center gap-12 w-[90%] max-w-4xl justify-between border border-transparent">
+                    <div className="font-sans font-bold text-xl tracking-tight">MB.</div>
+                    <div className="hidden md:flex gap-8 font-mono text-sm text-fond/70">
+                        <a href="#about" className="hover:text-accent transition-colors hover-lift">A propos</a>
+                        <a href="#experience" className="hover:text-accent transition-colors hover-lift">Expérience</a>
+                        <a href="#education" className="hover:text-accent transition-colors hover-lift">Formation</a>
+                        <a href="#skills" className="hover:text-accent transition-colors hover-lift">Compétences</a>
+                    </div>
+                    <a href="#cv-download" className="magnet-btn bg-sombre border border-accent/30 text-accent px-6 py-2 rounded-full font-sans font-semibold text-sm hover:bg-accent hover:text-primaire">
+                        Télécharger CV
+                    </a>
+                </nav>
+            );
+        };
+
+        const Hero = ({ onContactClick }) => {
+            const containerRef = useRef(null);
+
+            useEffect(() => {
+                const ctx = gsap.context(() => {
+                    gsap.from(".hero-anim", {
+                        y: 40,
+                        opacity: 0,
+                        duration: 1,
+                        stagger: 0.12,
+                        ease: "power3.out",
+                        delay: 0.2
+                    });
+                }, containerRef);
+                return () => ctx.revert();
+            }, []);
+
+            return (
+                <section className="relative h-[100dvh] flex flex-col justify-center items-center text-center px-4 overflow-hidden" ref={containerRef}>
+                    <div className="absolute inset-0 z-0 bg-primaire">
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-accent opacity-5 rounded-full blur-[120px]"></div>
+                        <div className="absolute inset-0 bg-gradient-to-t from-primaire via-transparent to-transparent"></div>
+                    </div>
+                    
+                    <div className="relative z-10 flex flex-col items-center">
+                        <div className="hero-anim w-32 h-32 rounded-full border-2 border-accent/30 overflow-hidden mb-8 flex items-center justify-center bg-sombre shadow-[0_0_40px_rgba(212,168,67,0.1)]">
+                            <span className="font-serif italic text-4xl text-accent">MB</span>
+                        </div>
+                        
+                        <h1 className="hero-anim font-sans font-extrabold text-5xl md:text-7xl lg:text-8xl tracking-tighter mb-2">
+                            Mouhamadou BA
+                        </h1>
+                        <h2 className="hero-anim font-serif italic text-2xl md:text-4xl text-accent mb-12">
+                            Ingénieur Maintenance Sureté Process
+                        </h2>
+
+                        <div className="hero-anim flex flex-wrap justify-center gap-4 md:gap-8 font-mono text-sm text-fond/60 mb-12">
+                            <span>10 ans d'expérience</span>
+                            <span className="hidden md:inline">|</span>
+                            <span>Expertise S4 HANA</span>
+                            <span className="hidden md:inline">|</span>
+                            <span>Projets Industriels</span>
+                        </div>
+
+                        <div className="hero-anim flex gap-4">
+                            <button onClick={onContactClick} className="magnet-btn bg-accent text-primaire px-8 py-4 rounded-full font-sans font-semibold hover:shadow-[0_0_30px_rgba(212,168,67,0.4)]">
+                                Me contacter
+                            </button>
+                        </div>
+                    </div>
+                </section>
+            );
+        };
+
+        const About = () => {
+            const sectionRef = useRef(null);
+
+            useEffect(() => {
+                const ctx = gsap.context(() => {
+                    gsap.from(".about-anim", {
+                        scrollTrigger: {
+                            trigger: sectionRef.current,
+                            start: "top 75%",
+                        },
+                        y: 30,
+                        opacity: 0,
+                        duration: 1,
+                        stagger: 0.15,
+                        ease: "power3.out"
+                    });
+                }, sectionRef);
+                return () => ctx.revert();
+            }, []);
+
+            return (
+                <section id="about" className="py-32 px-4 md:px-12 bg-fond text-primaire rounded-[3rem] mx-2 md:mx-6 my-12" ref={sectionRef}>
+                    <div className="max-w-6xl mx-auto flex flex-col md:flex-row gap-12 md:gap-24">
+                        <div className="md:w-1/3 flex justify-between">
+                            <h2 className="about-anim font-serif italic text-5xl md:text-6xl text-primaire leading-tight">Le<br/>Manifeste</h2>
+                            <div className="w-[2px] h-full bg-accent ml-8 hidden md:block opacity-50 about-anim"></div>
+                        </div>
+                        <div className="md:w-2/3 flex flex-col justify-center">
+                            <p className="about-anim font-sans text-xl md:text-2xl leading-relaxed text-sombre/80">
+                                Fort de <strong className="text-primaire font-bold text-accent">10 ans d'expérience</strong> en maintenance industrielle et fiabilisation des processus. Mon approche allie <strong className="text-primaire font-bold">rigueur technique</strong> et <strong className="text-primaire font-bold">optimisation stratégique</strong>.
+                            </p>
+                            <p className="about-anim font-sans text-xl md:text-2xl leading-relaxed text-sombre/80 mt-6">
+                                De l'ingénierie fiabiliste chez Sanofi à la gestion de méthodes chez Merck Santé, jusqu'à l'implémentation SAP PM (ECC & S4 HANA), je transforme les défis complexes en systèmes industriels résilients et performants.
+                            </p>
+                        </div>
+                    </div>
+                </section>
+            );
+        };
+
+        const Experience = () => {
+            const sectionRef = useRef(null);
+            
+            const experiences = [
+                {
+                    period: "Fév. 2025 - Présent",
+                    role: "KU SAP S4HANA",
+                    company: "Merck Group",
+                    desc: "Préparation des données pour les migrations, réalisation des tests, formation des utilisateurs et rédaction des procédures."
+                },
+                {
+                    period: "Juil. 2021 - Sept. 2024",
+                    role: "Responsable Méthodes Maintenance Industrielle",
+                    company: "MERCK France",
+                    desc: "Gestion de la maintenance, pilotage des arrêts techniques, déploiement des plans préventifs et standards de maintenance (ISO, énergie, coûts)."
+                },
+                {
+                    period: "Juin 2018 - Juil. 2021",
+                    role: "Ingénieur Méthodes Maintenance",
+                    company: "Sanofi",
+                    desc: "Correspondant projet de rénovation, responsable AMDEC, gestion documentaire technique et création de plans et gammes de maintenance SAP."
+                },
+                {
+                    period: "Fév. 2018 - Avr. 2018",
+                    role: "Ingénieur Maintenance PIMAN",
+                    company: "SOCODEI (EDF)",
+                    desc: "Pilotage maintenance sur projet de nouveau bâtiment nucléaire, AMDEC malaxeur, criticité et intégration GMAO (EAM)."
+                },
+                {
+                    period: "Sept. 2013 - Sept. 2017",
+                    role: "Apprenti Ingénieur Méthodes",
+                    company: "Framatome",
+                    desc: "Déploiement SAP-PM, gestion de stock pièces de rechange, suivi TRS et gestion de projets (conformité, 5S, soudabilité)."
+                }
+            ];
+
+            useEffect(() => {
+                const ctx = gsap.context(() => {
+                    gsap.utils.toArray('.exp-card').forEach((card, i) => {
+                        gsap.from(card, {
+                            scrollTrigger: {
+                                trigger: card,
+                                start: "top 85%",
+                            },
+                            x: i % 2 === 0 ? -50 : 50,
+                            opacity: 0,
+                            duration: 0.8,
+                            ease: "power2.out"
+                        });
+                    });
+                }, sectionRef);
+                return () => ctx.revert();
+            }, []);
+
+            return (
+                <section id="experience" className="py-32 px-4 max-w-5xl mx-auto" ref={sectionRef}>
+                    <h2 className="font-serif italic text-5xl text-center mb-24 text-fond">La Timeline<br/><span className="text-accent">Vivante</span></h2>
+                    
+                    <div className="relative">
+                        {/* Center Line */}
+                        <div className="absolute left-4 md:left-1/2 top-0 bottom-0 w-[1px] bg-accent/20 -translate-x-1/2"></div>
+                        
+                        {experiences.map((exp, idx) => (
+                            <div key={idx} className={`exp-card relative flex flex-col md:flex-row items-center justify-between mb-16 ${idx % 2 === 0 ? 'md:flex-row-reverse' : ''}`}>
+                                <div className="hidden md:block w-5/12"></div>
+                                
+                                {/* Dot */}
+                                <div className="absolute left-4 md:left-1/2 w-4 h-4 rounded-full bg-accent -translate-x-1/2 timeline-dot z-10"></div>
+                                
+                                <div className="w-full md:w-5/12 pl-12 md:pl-0">
+                                    <div className="bg-sombre/40 border border-fond/5 rounded-[2rem] p-8 hover-lift hover:bg-sombre/60 transition-colors">
+                                        <span className="font-mono text-accent text-sm mb-4 block">{exp.period}</span>
+                                        <h3 className="font-sans font-bold text-2xl mb-1 text-fond">{exp.role}</h3>
+                                        <h4 className="font-sans text-accent/80 mb-4">{exp.company}</h4>
+                                        <p className="font-sans text-fond/60 leading-relaxed text-sm">{exp.desc}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+            );
+        };
+
+        const Education = () => {
+            const sectionRef = useRef(null);
+            
+            useEffect(() => {
+                const ctx = gsap.context(() => {
+                    gsap.from(".edu-card", {
+                        scrollTrigger: {
+                            trigger: sectionRef.current,
+                            start: "top 80%",
+                        },
+                        y: 30,
+                        opacity: 0,
+                        duration: 0.8,
+                        stagger: 0.15,
+                        ease: "power2.out"
+                    });
+                }, sectionRef);
+                return () => ctx.revert();
+            }, []);
+
+            return (
+                <section id="education" className="py-24 px-4 max-w-4xl mx-auto" ref={sectionRef}>
+                    <h2 className="font-serif italic text-4xl text-center mb-16 text-fond">Les Fondations</h2>
+                    <div className="flex flex-col gap-6">
+                        <div className="edu-card bg-sombre/40 border border-fond/5 rounded-3xl p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 hover-lift hover:bg-sombre/60 transition-colors">
+                            <div>
+                                <h3 className="font-sans font-bold text-xl text-fond mb-1">Ingénieur Génie Industriel</h3>
+                                <p className="font-sans text-fond/60 text-sm">Option Sûreté Process et Maintenance</p>
+                                <p className="font-sans text-accent/80 mt-2">Université Bourgogne Europe</p>
+                            </div>
+                            <span className="font-mono text-accent whitespace-nowrap bg-primaire border border-accent/20 px-6 py-3 rounded-xl shadow-[0_0_15px_rgba(212,168,67,0.1)]">2013 — 2017</span>
+                        </div>
+                    </div>
+                </section>
+            );
+        };
+
+        const Skills = () => {
+            const sectionRef = useRef(null);
+            const skills = [
+                { name: "SAP PM (ECC & S4 HANA)", level: 95 },
+                { name: "Fiabilité Process", level: 90 },
+                { name: "Méthodes Maintenance", level: 92 },
+                { name: "Projets Industriels", level: 85 },
+                { name: "GMAO / Optimisation", level: 88 }
+            ];
+
+            useEffect(() => {
+                const ctx = gsap.context(() => {
+                    gsap.from(".skill-card", {
+                        scrollTrigger: {
+                            trigger: sectionRef.current,
+                            start: "top 80%",
+                        },
+                        y: 20,
+                        opacity: 0,
+                        duration: 0.8,
+                        stagger: 0.1,
+                        ease: "power2.out"
+                    });
+                }, sectionRef);
+                return () => ctx.revert();
+            }, []);
+
+            return (
+                <section id="skills" className="py-32 px-4 max-w-6xl mx-auto" ref={sectionRef}>
+                    <h2 className="font-serif italic text-5xl text-center mb-24 text-fond">Le Tableau de<br/><span className="text-accent">Bord</span></h2>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {skills.map((skill, idx) => (
+                            <div key={idx} className="skill-card bg-sombre/40 border border-fond/5 rounded-[2rem] p-8 flex flex-col items-center justify-center text-center hover-lift">
+                                <div className="relative w-24 h-24 mb-6">
+                                    <svg className="w-full h-full transform -rotate-90">
+                                        <circle cx="48" cy="48" r="40" stroke="rgba(245, 243, 238, 0.05)" strokeWidth="4" fill="none" />
+                                        <circle cx="48" cy="48" r="40" stroke="#D4A843" strokeWidth="4" fill="none" strokeDasharray="251.2" strokeDashoffset={251.2 - (251.2 * skill.level) / 100} className="transition-all duration-1000 ease-out" />
+                                    </svg>
+                                    <div className="absolute inset-0 flex items-center justify-center font-mono text-xl text-fond">
+                                        {skill.level}%
+                                    </div>
+                                </div>
+                                <h3 className="font-sans font-semibold text-lg text-fond">{skill.name}</h3>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+            );
+        };
+
+        const Contact = ({ onContactClick }) => {
+            return (
+                <section id="contact" className="py-32 px-4 bg-accent text-primaire rounded-t-[4rem] mt-32">
+                    <div className="max-w-4xl mx-auto text-center flex flex-col items-center">
+                        <h2 className="font-serif italic text-5xl md:text-7xl mb-12">Travaillons<br/>ensemble.</h2>
+                        
+                        <div className="flex gap-8 mb-16">
+                            <a href="#" className="hover-lift p-4 bg-primaire/10 rounded-full hover:bg-primaire/20 transition-colors">
+                                <Icon name="mail" size={32} />
+                            </a>
+                            <a href="https://www.linkedin.com/in/mouhamadou-ba-858073131/" target="_blank" rel="noopener noreferrer" className="hover-lift p-4 bg-primaire/10 rounded-full hover:bg-primaire/20 transition-colors">
+                                <Icon name="linkedin" size={32} />
+                            </a>
+                            <a href="https://github.com/" target="_blank" rel="noopener noreferrer" className="hover-lift p-4 bg-primaire/10 rounded-full hover:bg-primaire/20 transition-colors">
+                                <Icon name="github" size={32} />
+                            </a>
+                        </div>
+                        
+                        <button onClick={onContactClick} className="magnet-btn bg-primaire text-accent px-12 py-5 rounded-full font-sans font-bold text-lg hover:shadow-[0_0_40px_rgba(15,15,19,0.3)]">
+                            Me confier une mission
+                        </button>
+                    </div>
+                    
+                    <div className="mt-32 pt-8 border-t border-primaire/20 flex flex-col md:flex-row justify-between items-center font-mono text-sm max-w-6xl mx-auto gap-4">
+                        <p>Mouhamadou BA © {new Date().getFullYear()}</p>
+                        <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                            <span>Système Opérationnel</span>
+                        </div>
+                    </div>
+                </section>
+            );
+        };
+
+        const ContactModal = ({ isOpen, onClose }) => {
+            const overlayRef = useRef(null);
+            const modalRef = useRef(null);
+
+            useEffect(() => {
+                if (isOpen) {
+                    gsap.fromTo(overlayRef.current, { opacity: 0 }, { opacity: 1, duration: 0.3, ease: "power2.out" });
+                    gsap.fromTo(modalRef.current, { y: 50, opacity: 0, scale: 0.95 }, { y: 0, opacity: 1, scale: 1, duration: 0.4, ease: "power3.out" });
+                }
+            }, [isOpen]);
+
+            const handleClose = () => {
+                gsap.to(overlayRef.current, { opacity: 0, duration: 0.3, ease: "power2.in" });
+                gsap.to(modalRef.current, { y: 50, opacity: 0, scale: 0.95, duration: 0.3, ease: "power3.in", onComplete: onClose });
+            };
+
+            if (!isOpen) return null;
+
+            return (
+                <div ref={overlayRef} className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-primaire/90 backdrop-blur-md">
+                    <div ref={modalRef} className="relative bg-sombre border border-accent/20 rounded-[2rem] p-8 md:p-12 w-full max-w-xl shadow-[0_0_50px_rgba(212,168,67,0.15)] overflow-hidden">
+                        
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-accent/5 rounded-full blur-[60px] pointer-events-none"></div>
+
+                        <button onClick={handleClose} className="absolute top-6 right-6 text-fond/60 hover:text-accent hover-lift z-10 p-2 bg-primaire/50 rounded-full">
+                            <Icon name="x" size={20} />
+                        </button>
+                        
+                        <h3 className="font-serif italic text-3xl md:text-4xl text-fond mb-2 relative z-10">Initier un projet</h3>
+                        <p className="font-sans text-fond/60 text-sm mb-8 relative z-10">Détaillez vos besoins industriels ou votre projet de migration SAP.</p>
+                        
+                        <form className="flex flex-col gap-5 relative z-10" onSubmit={(e) => { e.preventDefault(); handleClose(); alert("Formulaire envoyé (Simulation) !"); }}>
+                            <div className="flex flex-col gap-2">
+                                <label className="font-mono text-xs text-accent uppercase tracking-wider">Nom de l'entreprise</label>
+                                <input required type="text" className="bg-primaire/80 border border-fond/10 rounded-xl px-4 py-3 text-fond focus:outline-none focus:border-accent transition-colors" placeholder="Ex: Sanofi, Merck..." />
+                            </div>
+                            <div className="flex flex-col gap-2">
+                                <label className="font-mono text-xs text-accent uppercase tracking-wider">Nom & Détails de la mission</label>
+                                <textarea required rows="4" className="bg-primaire/80 border border-fond/10 rounded-xl px-4 py-3 text-fond focus:outline-none focus:border-accent transition-colors" placeholder="Décrivez les objectifs, le contexte technique..."></textarea>
+                            </div>
+                            <div className="flex flex-col gap-2">
+                                <label className="font-mono text-xs text-accent uppercase tracking-wider">Budget estimé (€)</label>
+                                <input required type="text" className="bg-primaire/80 border border-fond/10 rounded-xl px-4 py-3 text-fond focus:outline-none focus:border-accent transition-colors" placeholder="Ex: > 15 000€" />
+                            </div>
+                            
+                            <button type="submit" className="magnet-btn w-full bg-accent text-primaire py-4 rounded-xl font-sans font-bold mt-4 hover:shadow-[0_0_20px_rgba(212,168,67,0.4)]">
+                                Envoyer la demande
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            );
+        };
+
+        const App = () => {
+            const [isModalOpen, setIsModalOpen] = useState(false);
+
+            return (
+                <main className="min-h-screen">
+                    <Navbar />
+                    <Hero onContactClick={() => setIsModalOpen(true)} />
+                    <About />
+                    <Experience />
+                    <Education />
+                    <Skills />
+                    <Contact onContactClick={() => setIsModalOpen(true)} />
+                    
+                    <ContactModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+                </main>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
